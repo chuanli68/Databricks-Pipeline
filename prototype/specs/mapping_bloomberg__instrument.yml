@@ -1,0 +1,37 @@
+# S5 mapping — the sole input the renderer used to produce 04_silver_pubmkt.py's
+# bloomberg block. Prototype instance of templates/mapping.yml
+# One source feed produces TWO satellites (doc 06 §1.3 / §1.3b): descriptive
+# attributes and a price time series. Splitting them is what makes restatements
+# and multi-date batches correct.
+mapping_id: pubmkt.bloomberg.eod_prices__instrument
+contract: {source_feed_id: pubmkt.bloomberg.eod_prices, version: ">=1.0.0 <2.0.0"}
+entity: {name: instrument, version: ">=1.0.0 <2.0.0"}
+tier: 1
+approved_by: modeler@example.com  # PR merge = approval
+business_key_derivation:
+  source_columns: [isin]
+  rule: "hub business key = upper(trim(isin)); km entry (bloomberg, figi) -> hk"
+  confidence: 0.98
+dedup: {keys: [figi, price_date], order_by: "_load_ts DESC"}
+
+satellites:
+  - target: pubmkt_silver.instrument.s_instrument__bloomberg
+    satellite_kind: descriptive           # grain: instrument_hk
+    scd: {effective_from: price_date}
+    column_mappings:
+      - {source: name_full,       attribute: name,       transform: trim,  confidence: 0.97}
+      - {source: crncy,           attribute: currency,   transform: upper, confidence: 0.99}
+      - {source: industry_sector, attribute: sector_raw, transform: null,  confidence: 0.90}
+    hash_column_list: [name, currency, sector_raw]
+    hash_column_list_version: 1
+
+  - target: pubmkt_silver.instrument.s_instrument_price__bloomberg
+    satellite_kind: multi_active          # grain: instrument_hk + price_date
+    subkeys: [price_date]
+    scd: {effective_from: price_date}
+    column_mappings:
+      - {source: px_last, attribute: close_px, transform: null, confidence: 0.98}
+    hash_column_list: [close_px]
+    hash_column_list_version: 1
+
+unmapped_source_columns: []

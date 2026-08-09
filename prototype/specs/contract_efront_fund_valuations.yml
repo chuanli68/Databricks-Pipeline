@@ -1,0 +1,23 @@
+# S3 contract (compiled) — private markets side
+source_feed_id: pvtmkt.efront.fund_valuations
+version: 1.0.0
+owner: {value: pm-private-data-team, provenance: human}
+grain: {value: one row per fund per valuation date, provenance: human}
+business_key: {value: [fund_code, valuation_date], provenance: agent_human_approved}
+classification: {value: confidential, provenance: human}   # PE data more sensitive
+sla: {value: "quarterly, T+20 by 18:00 SGT", provenance: human}
+target_catalog: pvtmkt_bronze
+target_schema: efront
+columns:
+  - {name: fund_code,      type: {value: string, provenance: discovered}, nullable: {value: false, provenance: discovered},
+     description: {value: "eFront fund code — enterprise business key for fund", provenance: human}}
+  - {name: fund_name,      type: {value: string, provenance: discovered}}
+  - {name: vintage,        type: {value: int, provenance: discovered},
+     checks: {value: ["BETWEEN 1990 AND 2030"], provenance: agent_human_approved}}
+  - {name: currency,       type: {value: string, provenance: discovered}}
+  - {name: asset_class,    type: {value: string, provenance: discovered},
+     description: {value: "Maps to ref_master.reference.asset_class.code", provenance: human}}
+  - {name: nav_musd,       type: {value: double, provenance: discovered},
+     checks: {value: ["> 0"], provenance: agent_human_approved}}
+  - {name: valuation_date, type: {value: date, provenance: discovered}}
+hash_column_list_version: 1

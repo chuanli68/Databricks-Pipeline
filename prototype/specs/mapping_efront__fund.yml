@@ -1,0 +1,34 @@
+# S5 mapping — renderer input for 05_silver_pvtmkt.py
+mapping_id: pvtmkt.efront.fund_valuations__fund
+contract: {source_feed_id: pvtmkt.efront.fund_valuations, version: ">=1.0.0 <2.0.0"}
+entity: {name: fund, version: ">=1.0.0 <2.0.0"}
+tier: 1
+approved_by: modeler@example.com
+business_key_derivation:
+  source_columns: [fund_code]
+  rule: "hub business key = upper(trim(fund_code)); km entry (efront, fund_code) -> hk"
+  confidence: 0.99
+dedup: {keys: [fund_code, valuation_date], order_by: "_load_ts DESC"}
+
+satellites:
+  - target: pvtmkt_silver.fund.s_fund__efront
+    satellite_kind: descriptive           # grain: fund_hk
+    scd: {effective_from: valuation_date}
+    column_mappings:
+      - {source: fund_name,   attribute: fund_name,   transform: trim,  confidence: 0.98}
+      - {source: vintage,     attribute: vintage,     transform: null,  confidence: 0.99}
+      - {source: currency,    attribute: currency,    transform: upper, confidence: 0.99}
+      - {source: asset_class, attribute: asset_class, transform: null,  confidence: 0.95}
+    hash_column_list: [fund_name, vintage, currency, asset_class]
+    hash_column_list_version: 1
+
+  - target: pvtmkt_silver.fund.s_fund_nav__efront
+    satellite_kind: multi_active          # grain: fund_hk + valuation_date
+    subkeys: [valuation_date]             # a restated NAV versions only that period
+    scd: {effective_from: valuation_date}
+    column_mappings:
+      - {source: nav_musd, attribute: nav_musd, transform: null, confidence: 0.98}
+    hash_column_list: [nav_musd]
+    hash_column_list_version: 1
+
+unmapped_source_columns: []

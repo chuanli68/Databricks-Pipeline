@@ -1,0 +1,32 @@
+# S3 — Compiled source contract. Produced by A2 from intake.md + discovery.yml. Semver.
+# provenance: human | discovered | agent | agent_human_approved  (rules in docs/02 §3)
+source_feed_id: pubmkt.bloomberg.eod_prices
+version: 1.0.0
+changelog:
+  - {version: 1.0.0, date: 2026-08-08, change: "initial compilation", by: A2}
+owner: {value: "pm-data-team", provenance: human}
+grain: {value: "one row per instrument per trading day", provenance: human}   # cross-checked vs candidate_keys
+business_key: {value: [instrument_id, price_date], provenance: agent_human_approved}
+classification: {value: internal, provenance: human}       # cross-checked vs pii_scan
+sla: {value: "T+1 by 07:00 SGT", provenance: human}
+usage_restrictions: {value: [], provenance: human}
+target_catalog: pubmkt_bronze
+target_schema: bloomberg
+columns:
+  - name: instrument_id
+    type: {value: string, provenance: discovered}
+    nullable: {value: false, provenance: discovered}
+    description: {value: "Bloomberg FIGI", provenance: human}
+    checks: []
+  - name: price_date
+    type: {value: date, provenance: discovered}
+    nullable: {value: false, provenance: discovered}
+    description: {value: "Trading date, exchange local", provenance: human}
+  - name: close_px
+    type: {value: "decimal(18,6)", provenance: discovered}
+    description: {value: "EOD close, corp-action adjusted", provenance: agent_human_approved}
+    checks: {value: ["> 0"], provenance: agent_human_approved}   # rendered as DLT expectations
+  - name: vendor_flag_3
+    type: {value: string, provenance: discovered}
+    status: undocumented          # lands in bronze; excluded from silver until described
+hash_column_list_version: 1        # doc 06 §1.3 — versioned hash inputs

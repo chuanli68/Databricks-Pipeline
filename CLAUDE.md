@@ -1,0 +1,1 @@
+This is to create an architectural desgin to build an enterprise data warehouse using Databricks.  The key points are we must leverage LLMs to generate stable schema and pipeline code, hence the entire system is stable. i.e. it cannot trigger rebuild or reload all data each time input data sources changes

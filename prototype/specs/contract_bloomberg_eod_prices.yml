@@ -1,0 +1,26 @@
+# S3 contract (compiled). Prototype instance of templates/contract.yml
+source_feed_id: pubmkt.bloomberg.eod_prices
+version: 1.0.0
+owner: {value: pm-data-team, provenance: human}
+grain: {value: one row per instrument per trading day, provenance: human}
+business_key: {value: [figi, price_date], provenance: agent_human_approved}
+classification: {value: internal, provenance: human}
+sla: {value: "T+1 by 07:00 SGT", provenance: human}
+target_catalog: pubmkt_bronze
+target_schema: bloomberg
+columns:
+  - {name: figi,            type: {value: string, provenance: discovered}, nullable: {value: false, provenance: discovered},
+     description: {value: "Bloomberg FIGI", provenance: human}}
+  - {name: isin,            type: {value: string, provenance: discovered},
+     description: {value: "ISIN — enterprise business key for instrument identity", provenance: human}}
+  - {name: name_full,       type: {value: string, provenance: discovered},
+     description: {value: "Official instrument name", provenance: agent_human_approved}}
+  - {name: crncy,           type: {value: string, provenance: discovered},
+     description: {value: "Denomination currency ISO 4217", provenance: agent_human_approved}}
+  - {name: industry_sector, type: {value: string, provenance: discovered},
+     description: {value: "Vendor sector taxonomy", provenance: agent_human_approved}}
+  - {name: px_last,         type: {value: double, provenance: discovered},
+     checks: {value: ["> 0"], provenance: agent_human_approved},
+     description: {value: "EOD close, corp-action adjusted", provenance: human}}
+  - {name: price_date,      type: {value: date, provenance: discovered}}
+hash_column_list_version: 1

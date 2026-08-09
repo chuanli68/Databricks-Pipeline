@@ -1,0 +1,33 @@
+# S5 — Mapping spec. Proposed by A3, approved by modeler. Sole input to A4 codegen.
+mapping_id: pubmkt.bloomberg.eod_prices__instrument
+contract: {source_feed_id: pubmkt.bloomberg.eod_prices, version: ">=1.0.0 <2.0.0"}
+entity: {name: instrument, version: ">=1.0.0 <2.0.0"}
+tier: 1
+approved_by: ""                    # modeler id; PR merge = approval
+business_key_derivation:
+  source_columns: [instrument_id]
+  rule: "km lookup on source_system='bloomberg', source_key=instrument_id; unmatched → hub+km insert with composite fallback"
+  confidence: 0.95
+satellite_kind: descriptive        # descriptive | multi_active  (doc 06 §1.3/1.3b)
+# subkeys: [price_date]            # REQUIRED for multi_active: extra grain columns.
+                                   # Use when the source can supply >1 value per entity at once
+                                   # (price series, quarterly NAV, periodic ratings).
+scd:
+  effective_from: price_date       # source event time per contract
+dedup:
+  keys: [instrument_id, price_date]
+  order_by: "load_ts DESC"         # keep latest arrival
+column_mappings:
+  - {source: name_full,  attribute: name,        transform: "trim",            confidence: 0.97}
+  - {source: crncy,      attribute: currency,    transform: "upper",           confidence: 0.99}
+  - {source: px_last,    attribute: close_px,    transform: null,              confidence: 0.98}
+  - source: industry_sector
+    attribute: asset_class
+    custom_transform: |            # agent-written SQL — ALWAYS flagged for line-by-line review
+      CASE WHEN industry_sector IN ('Govt','Sovereign') THEN 'FIXED_INCOME_SOVEREIGN'
+           ELSE map_asset_class(industry_sector) END
+    confidence: 0.71               # <0.8 → listed at top of PR for reviewer attention
+unmapped_source_columns:           # explicit — nothing silently dropped
+  - {name: vendor_flag_3, reason: "status: undocumented in contract"}
+hash_column_list: [name, currency, close_px, asset_class]   # canonical order; versioned
+hash_column_list_version: 1
